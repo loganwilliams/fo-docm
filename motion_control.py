@@ -1,6 +1,7 @@
 import serial
 import glob
 import time
+import subprocess
 
 def scan():
     return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
@@ -30,10 +31,19 @@ def readyToMove(ser):
     status = getStatus(ser)
     return (status == "34" or status == "33" or status == "32")
 
+def getInput():
+    args = ("capture-one/AdInputAD")
+    popen = subprocess.Popen(args, stdout=subprocess.PIPE)
+    popen.wait()
+    output = popen.stdout.read()
+    return output
+
 if __name__=='__main__':
-    print "Found ports:"
-    for name in scan():
-        print name
+    #print "Found ports:"
+    #for name in scan():
+    #    print name
+
+    pd = []
 
     ser = serial.Serial('/dev/ttyUSB0', 921600, timeout=1)
 
@@ -45,10 +55,16 @@ if __name__=='__main__':
 
     # move 1mm in 1um increments, reporting position every step
     current_position = 0.0
-    while (current_position <= 0.1):
+    while (current_position <= 1):
         if readyToMove(ser):
             moveRelative(ser,0.001)
             current_position = getPosition(ser)
             print current_position
+            pd.append(int(getInput(),16))
+
+    f = open('data', 'w')
+
+    for item in pd:
+        print>>f, item
 
     ser.close()

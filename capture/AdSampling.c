@@ -1,0 +1,111 @@
+/* **************************************************************
+   
+   AdSampling.c -Source Code of AdStartSampling sample program
+   --------------------------------------------------------------
+   Version 1.00-01
+   --------------------------------------------------------------
+   Date 2009/03/17
+   --------------------------------------------------------------
+   Copyright 2000,2009 Interface Corporation. All rights reserved.
+   ************************************************************** */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "fbiad.h"
+
+ADBOARDSPEC    BoardSpec;
+ADSMPLREQ      AdSmplConfig;        // Sampling conditions setting structure
+unsigned char  bSmplData[1024][2];  // Sampling data storage area
+unsigned short wSmplData[1024][2];  // Sampling data storage area
+unsigned int   dwSmplData[1024][2]; // Sampling data storage area
+
+int main(void)
+{
+	int            ret, dnum;
+	unsigned long  ulSmplNum;           // Number of the sampling data acquisition
+	unsigned long  i;
+	
+	system("clear");
+	printf("Enter the device number.: ");
+	scanf("%d", &dnum);
+	
+	// Open a device.
+	ret = AdOpen(dnum);
+	if(ret){
+		printf("Open error: ret=%Xh\n", ret);
+		exit(EXIT_FAILURE);
+	}
+	
+	// 
+	ret = AdGetDeviceInfo(dnum, &BoardSpec);
+	if(ret){
+		printf("AdGetDeviceInfo error: ret=%Xh\n", ret);
+		AdClose(dnum);
+		exit(EXIT_FAILURE);
+	}
+	
+	// Retrieve the sampling conditions.
+	ret = AdGetSamplingConfig( dnum, &AdSmplConfig );
+	if(ret){
+		printf("AdGetSamplingConfig error: ret=%Xh\n", ret);
+		AdClose(dnum);
+		exit(EXIT_FAILURE);
+	}
+	
+	// Retrieve 1024 continuous data from CH1 and CH2.
+	AdSmplConfig.ulChCount = 2;
+	AdSmplConfig.SmplChReq[0].ulChNo = 1;
+	AdSmplConfig.SmplChReq[0].ulRange = AdSmplConfig.SmplChReq[0].ulRange;
+	AdSmplConfig.SmplChReq[1].ulChNo = 2;	
+	AdSmplConfig.SmplChReq[1].ulRange = AdSmplConfig.SmplChReq[0].ulRange;
+	AdSmplConfig.ulSmplNum = 1024;
+	ret = AdSetSamplingConfig(dnum, &AdSmplConfig);
+	if (ret) {
+		printf("AdSetSamplingConfig error: ret=%Xh\n", ret);
+		AdClose(dnum);
+		exit(EXIT_FAILURE);
+	}
+	
+	// Start the sampling with synchronous mode.
+	ret = AdStartSampling(dnum, FLAG_SYNC);
+	if (ret) {
+		printf("AdStartSampling error: ret=%Xh\n", ret);
+		AdClose(dnum);
+		exit(EXIT_FAILURE);
+	}
+	
+	// Retrieve the sampling data to wSmplData
+	ulSmplNum = 1024;
+	if (BoardSpec.ulResolution <= 8) {
+		ret = AdGetSamplingData(dnum, bSmplData, &ulSmplNum);
+	} else if(BoardSpec.ulResolution > 8 && BoardSpec.ulResolution <= 16) {
+		ret = AdGetSamplingData(dnum, wSmplData, &ulSmplNum);
+	} else {
+		ret = AdGetSamplingData(dnum, dwSmplData, &ulSmplNum);
+	}
+	if (ret) {
+		printf("AdGetSamplingData error: ret=%Xh\n", ret);
+		AdClose(dnum);
+		exit(EXIT_FAILURE);
+	}
+	
+	// Display the retrieved result.
+	if (BoardSpec.ulResolution <= 8) {
+		for (i = 0; i < ulSmplNum; i++) {
+			printf("CH1=%02Xh  CH2=%02Xh\n", bSmplData[i][0], bSmplData[i][1]);
+		}
+	} else if(BoardSpec.ulResolution > 8 && BoardSpec.ulResolution <= 16) {
+		for (i = 0; i < ulSmplNum; i++) {
+			printf("CH1=%04Xh  CH2=%04Xh\n", wSmplData[i][0], wSmplData[i][1]);
+		}
+	} else {
+		for (i = 0; i < ulSmplNum; i++) {
+			printf("CH1=%08Xh  CH2=%08Xh\n", dwSmplData[i][0], dwSmplData[i][1]);
+		}
+	}
+	
+	// Close the device.
+	AdClose(dnum);
+	
+	return 0;
+}
