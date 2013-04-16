@@ -49,25 +49,29 @@ if __name__=='__main__':
 
     print seekOrigin(ser)
     print getPosition(ser)
-    start_pos = 5
-    move_interval = 0.0005
-    end_pos = 6
-
-    moveAbsolute(ser, start_pos)
+    moveAbsolute(ser, 0)
 
     time.sleep(1)
 
-    f = open('data', 'w')
+    moveAbsolute(ser, 4)
+
+    current_position = 0.0
+    while (current_position < 3.9):
+        current_position = getPosition(ser)
+        print current_position
 
     # move 1mm in 1um increments, reporting position every step
-    current_position = start_pos
-    while (current_position < end_pos):
+    current_position = 0.0
+    while (current_position <= 1):
         if readyToMove(ser):
-            moveRelative(ser,move_interval)
+            moveRelative(ser,0.001)
             current_position = getPosition(ser)
             print current_position
-            val = int(getInput(),16)
-            pd.append(val)
-            print>>f, val
-            
+            pd.append(int(getInput(),16))
+
+    f = open('data', 'w')
+
+    for item in pd:
+        print>>f, item
+
     ser.close()
