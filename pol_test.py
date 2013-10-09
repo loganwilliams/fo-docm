@@ -47,31 +47,34 @@ if __name__=='__main__':
 
     ser = serial.Serial('/dev/ttyUSB0', 921600, timeout=1)
 
-    print seekOrigin(ser)
-    print getPosition(ser)
-    moveAbsolute(ser, 0)
+    #print seekOrigin(ser)
+    #print getPosition(ser)
+
+    while (1 == 1):
+        moveAbsolute(ser, 9.5)
+        time.sleep(0.3)
+        moveAbsolute(ser, 9.9)
+        time.sleep(0.3)    
+
+    start_pos = 5
+    move_interval = 0.0005
+    end_pos = 6
+
+    moveAbsolute(ser, start_pos)
 
     time.sleep(1)
 
-    moveAbsolute(ser, 30)
-
-    current_position = 0.0
-    while (current_position < 3.9):
-        current_position = getPosition(ser)
-        print current_position
-
-    # move 1mm in 1um increments, reporting position every step
-    current_position = 0.0
-    while (current_position <= 1):
-        if readyToMove(ser):
-            moveRelative(ser,0.001)
-            current_position = getPosition(ser)
-            print current_position
-            pd.append(int(getInput(),16))
-
     f = open('data', 'w')
 
-    for item in pd:
-        print>>f, item
-
+    # move 1mm in 1um increments, reporting position every step
+    current_position = start_pos
+    while (current_position < end_pos):
+        if readyToMove(ser):
+            moveRelative(ser,move_interval)
+            current_position = getPosition(ser)
+            print current_position
+            val = int(getInput(),16)
+            pd.append(val)
+            print>>f, val
+            
     ser.close()

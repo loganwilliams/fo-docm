@@ -12,12 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fbiad.h"
+#define SIZE 4000000
 
 ADBOARDSPEC    BoardSpec;
 ADSMPLREQ      AdSmplConfig;        // Sampling conditions setting structure
-unsigned char  bSmplData[1024][2];  // Sampling data storage area
-unsigned short wSmplData[1024][2];  // Sampling data storage area
-unsigned int   dwSmplData[1024][2]; // Sampling data storage area
+unsigned char  bSmplData[SIZE];  // Sampling data storage area
+unsigned short wSmplData[SIZE];  // Sampling data storage area
+unsigned int   dwSmplData[SIZE]; // Sampling data storage area
 
 int main(void)
 {
@@ -25,10 +26,11 @@ int main(void)
 	unsigned long  ulSmplNum;           // Number of the sampling data acquisition
 	unsigned long  i;
 	
-	system("clear");
-	printf("Enter the device number.: ");
-	scanf("%d", &dnum);
-	
+	//system("clear");
+	//printf("Enter the device number.: ");
+	//scanf("%d", &dnum);
+	dnum = 1;	
+
 	// Open a device.
 	ret = AdOpen(dnum);
 	if(ret){
@@ -53,12 +55,13 @@ int main(void)
 	}
 	
 	// Retrieve 1024 continuous data from CH1 and CH2.
-	AdSmplConfig.ulChCount = 2;
+	AdSmplConfig.ulChCount = 1;
 	AdSmplConfig.SmplChReq[0].ulChNo = 1;
-	AdSmplConfig.SmplChReq[0].ulRange = AdSmplConfig.SmplChReq[0].ulRange;
-	AdSmplConfig.SmplChReq[1].ulChNo = 2;	
-	AdSmplConfig.SmplChReq[1].ulRange = AdSmplConfig.SmplChReq[0].ulRange;
-	AdSmplConfig.ulSmplNum = 1024;
+	AdSmplConfig.SmplChReq[0].ulRange = AD_5V;
+	AdSmplConfig.ulSingleDiff = AD_INPUT_SINGLE;
+	AdSmplConfig.fSmplFreq = 2000000.0;
+
+	AdSmplConfig.ulSmplNum = SIZE;
 	ret = AdSetSamplingConfig(dnum, &AdSmplConfig);
 	if (ret) {
 		printf("AdSetSamplingConfig error: ret=%Xh\n", ret);
@@ -75,7 +78,7 @@ int main(void)
 	}
 	
 	// Retrieve the sampling data to wSmplData
-	ulSmplNum = 1024;
+	ulSmplNum = SIZE;
 	if (BoardSpec.ulResolution <= 8) {
 		ret = AdGetSamplingData(dnum, bSmplData, &ulSmplNum);
 	} else if(BoardSpec.ulResolution > 8 && BoardSpec.ulResolution <= 16) {
@@ -88,19 +91,21 @@ int main(void)
 		AdClose(dnum);
 		exit(EXIT_FAILURE);
 	}
+
+	FILE *f = fopen("data.dat", "w");
 	
 	// Display the retrieved result.
 	if (BoardSpec.ulResolution <= 8) {
 		for (i = 0; i < ulSmplNum; i++) {
-			printf("CH1=%02Xh  CH2=%02Xh\n", bSmplData[i][0], bSmplData[i][1]);
+			fprintf(f,"%d\n", bSmplData[i]);
 		}
 	} else if(BoardSpec.ulResolution > 8 && BoardSpec.ulResolution <= 16) {
 		for (i = 0; i < ulSmplNum; i++) {
-			printf("CH1=%04Xh  CH2=%04Xh\n", wSmplData[i][0], wSmplData[i][1]);
+			fprintf(f, "%d\n", wSmplData[i]);
 		}
 	} else {
 		for (i = 0; i < ulSmplNum; i++) {
-			printf("CH1=%08Xh  CH2=%08Xh\n", dwSmplData[i][0], dwSmplData[i][1]);
+			fprintf(f, "%d\n", dwSmplData[i]);
 		}
 	}
 	
