@@ -19,9 +19,10 @@ def getInput():
 def getInputSequence():
     args = ("capture/AdSampling")
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    popen.wait()
-    output = popen.stdout.read()
-    return output
+    (out, err) = popen.communicate()
+    #popen.wait()
+    #output = popen.stdout.read()
+    return out
 
 if __name__=='__main__':
     #print "Found ports:"
@@ -39,32 +40,36 @@ if __name__=='__main__':
 
     f = open('position_list.csv', 'w')
     
-    pos = 4.46
+    posS = 1.6
+    posE = 3
+    n = 10
 
-    zStage.moveAbsolute(pos)
+    zStage.moveAbsolute(posS)
     i = 1
 
     while not zStage.readyToMove():
         pass
 
-    print getInputSequence()
+    for i in range(n):
+        print i
 
-    
-    while pos < 4.54:
-        current_position = zStage.getPosition()
-        print pos
-        print>>f, (i, current_position)
+        zStage.moveAbsolute(posE)
 
-        pos += 0.0001
-        zStage.moveAbsolute(pos)
-    
+        ot = datetime.now()
+        print getInputSequence()
+        (p,t) = zStage.getPositionAndTime()
+        dt = (t - ot)        
+
+        print (p, dt.seconds*1000000 + dt.microseconds)
+        
         while not zStage.readyToMove():
             pass
 
-        os.rename("data.dat", "AOMsweep/data" + str(i) + ".dat")
-        getInputSequence()
-        i = i + 1
-        time.sleep(0.001)
+        zStage.moveAbsolute(posS)
+        
+        os.rename("data.dat", "reproducibility/data" + str(i) + ".dat")
 
+        while not zStage.readyToMove():
+            pass
             
     zStage.close()

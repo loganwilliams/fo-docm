@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fbiad.h"
-#define SIZE 4000000
+#define SIZE 2000000
 
 ADBOARDSPEC    BoardSpec;
 ADSMPLREQ      AdSmplConfig;        // Sampling conditions setting structure
@@ -70,6 +70,7 @@ int main(void)
 	}
 	
 	// Start the sampling with synchronous mode.
+	printf("Starting sampling%d\n", EOF);
 	ret = AdStartSampling(dnum, FLAG_SYNC);
 	if (ret) {
 		printf("AdStartSampling error: ret=%Xh\n", ret);

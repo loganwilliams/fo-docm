@@ -4,20 +4,12 @@ import time
 import subprocess
 from datetime import datetime
 from conex import *
-import os
 
 def scan():
     return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
 
 def getInput():
     args = ("capture-one/AdInputAD")
-    popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    popen.wait()
-    output = popen.stdout.read()
-    return output
-
-def getInputSequence():
-    args = ("capture/AdSampling")
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
     popen.wait()
     output = popen.stdout.read()
@@ -37,34 +29,20 @@ if __name__=='__main__':
 
     time.sleep(1)
 
-    f = open('position_list.csv', 'w')
+    f = open('linearity_test.csv', 'w')
     
-    pos = 4.46
-
-    zStage.moveAbsolute(pos)
-    i = 1
+    zStage.moveAbsolute(0)
 
     while not zStage.readyToMove():
         pass
 
-    print getInputSequence()
+    zStage.moveAbsolute(27)
 
-    
-    while pos < 4.54:
-        current_position = zStage.getPosition()
-        print pos
-        print>>f, (i, current_position)
+    o_dt = datetime.now()
 
-        pos += 0.0001
-        zStage.moveAbsolute(pos)
-    
-        while not zStage.readyToMove():
-            pass
-
-        os.rename("data.dat", "AOMsweep/data" + str(i) + ".dat")
-        getInputSequence()
-        i = i + 1
-        time.sleep(0.001)
-
+    while not zStage.readyToMove():
+        (current_position,t) = zStage.getPositionAndTime()
+        dt = t - o_dt
+        print>>f, (current_position, dt.seconds*1000000 + dt.microseconds )
             
     zStage.close()

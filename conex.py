@@ -1,4 +1,5 @@
 import serial
+from datetime import datetime
 
 class ConexAGP:
     def __init__(self, device):
@@ -16,6 +17,13 @@ class ConexAGP:
         line = self.ser.readline()
         line = line[3:-2]
         return float(line)
+
+    def getPositionAndTime(self):
+        self.ser.write("1TP?\r\n")
+	t = datetime.now()
+        line = self.ser.readline()
+        line = line[3:-2]
+        return (float(line),t)
 
     def seekOrigin(self):
         self.ser.write("1OR\r\n")
