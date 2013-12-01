@@ -17,12 +17,12 @@ def getInput():
     return output
 
 def getInputSequence():
-    args = ("capture/AdSampling")
+    args = ("capture/AdSampling",)
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    (out, err) = popen.communicate()
+    #(out, err) = popen.communicate()
     #popen.wait()
-    #output = popen.stdout.read()
-    return out
+    output = popen.stdout.readline()
+    return popen
 
 if __name__=='__main__':
     #print "Found ports:"
@@ -53,17 +53,22 @@ if __name__=='__main__':
     for i in range(n):
         print i
 
+        # tell the stage to start moving
         zStage.moveAbsolute(posE)
 
         ot = datetime.now()
-        print getInputSequence()
+
+        # tell the card to start capturing data
+        subp = getInputSequence()
+
         (p,t) = zStage.getPositionAndTime()
         dt = (t - ot)        
-
         print (p, dt.seconds*1000000 + dt.microseconds)
         
         while not zStage.readyToMove():
             pass
+
+        subp.communicate()
 
         zStage.moveAbsolute(posS)
         
