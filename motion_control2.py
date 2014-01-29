@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime
 from conex import *
 import os
+from threading import Thread
 
 def scan():
     return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
@@ -21,8 +22,11 @@ def getInputSequence():
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
     #(out, err) = popen.communicate()
     #popen.wait()
-    output = popen.stdout.readline()
+    #popen.stdout.flush()
+    #output = popen.stdout.readline()
+    #print output
     return popen
+    #return None
 
 if __name__=='__main__':
     #print "Found ports:"
@@ -33,15 +37,17 @@ if __name__=='__main__':
 
     zStage = ConexAGP('/dev/ttyUSB0')
 
-    print zStage.seekOrigin()
-    print zStage.getPosition()
+    #print zStage.seekOrigin()
+    #print zStage.getPosition()
 
     time.sleep(1)
-
-    f = open('position_list.csv', 'w')
     
-    posS = 1.6
-    posE = 3
+    center = 9.64
+
+    #posS = center - 0.2
+    #posE = center + 1.0
+    posS = 0
+    posE = 2
     n = 10
 
     zStage.moveAbsolute(posS)
@@ -53,28 +59,45 @@ if __name__=='__main__':
     for i in range(n):
         print i
 
+        posList = []
+        f = open('position_list.csv', 'w')
+
         # tell the stage to start moving
         zStage.moveAbsolute(posE)
 
-        ot = datetime.now()
+        (op, ot) = zStage.getPositionAndTime()
+        ot = ot.second*1000000 + ot.microsecond
+        posList.append((op, ot))
 
         # tell the card to start capturing data
         subp = getInputSequence()
 
-        (p,t) = zStage.getPositionAndTime()
-        dt = (t - ot)        
-        print (p, dt.seconds*1000000 + dt.microseconds)
-        
         while not zStage.readyToMove():
-            pass
+            (np, nt) = zStage.getPositionAndTime()
+            nt = nt.second*1000000 + nt.microsecond
+            posList.append((np, nt))
 
-        subp.communicate()
+        adcStartTime = int(subp.stdout.readline())
+
+        for j in range(len(posList)):
+            (p, t) = posList[j]
+            t = t - adcStartTime
+            
+            #if (t < 0):
+            #    t = t + 60000000
+            
+            posList[j] = (p, t)
+            print>>f, (str(t) + "," +str(p))
 
         zStage.moveAbsolute(posS)
         
+        f.close()
         os.rename("data.dat", "reproducibility/data" + str(i) + ".dat")
+        os.rename("position_list.csv", "reproducibility/position_list" + str(i) + ".csv")
 
         while not zStage.readyToMove():
             pass
+        
+        #raw_input("press enter to continue")
             
     zStage.close()
