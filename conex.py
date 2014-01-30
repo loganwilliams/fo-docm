@@ -6,8 +6,8 @@ class ConexAGP:
         self.device = device
         self.open()
 
-    def open(self):
-        self.ser = serial.Serial(self.device, 921600, timeout=1)
+    def open(self, baud=921600):
+        self.ser = serial.Serial(self.device, baud, timeout=1)
 
     def close(self):
         self.ser.close()
@@ -20,7 +20,7 @@ class ConexAGP:
 
     def getPositionAndTime(self):
         self.ser.write("1TP?\r\n")
-	t = datetime.now()
+        t = datetime.now()
         line = self.ser.readline()
         line = line[3:-2]
         return (float(line),t)
