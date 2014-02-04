@@ -9,7 +9,7 @@ class PriorXY:
 
 	def open(self, baud=9600):
 		self.ser = serial.Serial(self.device, baud, timeout=1)
-		self.ser.write("COMP,0\r")
+		#self.ser.write("COMP,0\r")
 
 	def close(self):
 		self.ser.close()
@@ -20,14 +20,17 @@ class PriorXY:
 		line = string.split(line, ",")
 		return (int(line[0]), int(line[1]))
 
+	def setPosition(self, x, y):
+	    self.ser.write("9," + str(x) + "," + str(y) + ",0\r")
+
 	def moveRelative(self, x, y):
-		self.ser.write("1GR," + str(x) + "," + str(y) + "\r")
+		self.ser.write("GR," + str(x) + "," + str(y) + "\r")
 
 	def moveAbsolute(self, x, y):
-		self.ser.write("1G," + str(x) + "," + str(y) + "\r")
+		self.ser.write("G," + str(x) + "," + str(y) + "\r")
 
 	def stop(self):
-		self.ser.write("I\r")
+		self.ser.write("I")
 
 	def setSpeed(self, speed):
 		self.ser.write("O," + str(speed) + "\r")
