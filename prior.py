@@ -22,12 +22,16 @@ class PriorXY:
 
 	def setPosition(self, x, y):
 	    self.ser.write("9," + str(x) + "," + str(y) + ",0\r")
+	    line = self.ser.readline()
 
 	def moveRelative(self, x, y):
 		self.ser.write("GR," + str(x) + "," + str(y) + "\r")
+	    line = self.ser.readline()
+
 
 	def moveAbsolute(self, x, y):
 		self.ser.write("G," + str(x) + "," + str(y) + "\r")
+		line = self.ser.readline()
 
 	def stop(self):
 		self.ser.write("I")
