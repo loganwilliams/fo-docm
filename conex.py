@@ -1,4 +1,5 @@
 import serial
+import time
 from datetime import datetime
 
 class ConexAGP:
@@ -43,3 +44,47 @@ class ConexAGP:
     def readyToMove(self):
         status = self.getStatus()
         return (status == "34" or status == "33" or status == "32")
+
+    def reset(self):
+        self.ser.write("1RS\r\n")
+
+    def setKp(self, Kp):
+        self.ser.write("1MM0\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1KP" + str(Kp) + "\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1MM1\r\n")
+        time.sleep(0.5)
+
+    def setLf(self, Lf):
+        self.ser.write("1MM0\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1LF" + str(Lf) + "\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1MM1\r\n")
+        time.sleep(0.5)
+
+    def setKi(self, Ki):
+        self.ser.write("1MM0\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1KP" + str(Ki) + "\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1MM1\r\n")
+        time.sleep(0.5)
+
+    def setKp(self, Kp):
+        self.ser.write("1MM0\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1KP" + str(Kp) + "\r\n")
+        time.sleep(0.5)
+
+        self.ser.write("1MM1\r\n")
+        time.sleep(0.5)
+
