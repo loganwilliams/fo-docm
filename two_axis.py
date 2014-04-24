@@ -10,33 +10,31 @@ import os
 def scan():
     return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
 
-def getInput():
-    args = ("capture-one/AdInputAD")
+def getInputSequence(length, sampling_rate=2e6):
+    args = ("AdSync/AdSync",str(length), str(sampling_rate))
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    popen.wait()
-    output = popen.stdout.read()
-    return output
-
-def getInputSequence():
-    args = ("capture/AdSampling")
-    popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-    popen.wait()
-    output = popen.stdout.read()
-    return output
+    #(out, err) = popen.communicate()
+    #popen.wait()
+    #popen.stdout.flush()
+    #output = popen.stdout.readline()
+    #print output
+    return popen
 
 if __name__=='__main__':
 
-    startZ = 9.4
-    endZ = 9.8
+    startZ = 17.4
+    endZ = 15.8
 
-    xRange = range(0, 100, 2)
-    y = 100
+    print "Enter scan number >",
+    scanNo = raw_input()
+
+    os.makedirs(str(scanNo))
+
+    xRange = range(1)
+    y = 0
 
     zStage = ConexAGP('/dev/ttyUSB0')
     xyStage = PriorXY('/dev/ttyS0')
-
-    #zStage.seekOrigin()
-    #time.sleep(1)
 
     zStage.moveAbsolute(startZ)
 
@@ -44,40 +42,26 @@ if __name__=='__main__':
         pass
 
     for xPos in xRange:
-        xyStage.moveAbsolute(xPos, y)
+        #xyStage.moveAbsolute(y, xPos)
 
         print("X position: " + str(xPos))
 
-        posList = []
-        f = open('z_position_list.csv')
+        subp = getInputSequence(5e5 + 1.5e6*abs(startZ - endZ))
+        time.sleep(0.1)
 
         zStage.moveAbsolute(endZ)
 
-        (op, ot) = zStage.getPositionAndTime()
-        ot = ot.second*1000000 + ot.microsecond
-        posList.append((op, ot))
-
-        subp = getInputSequence()
-
         while not zStage.readyToMove():
-            (np, nt) = zStage.getPositionAndTime()
-            nt = nt.second*1000000 + nt.microsecond
-            posList.append((np, nt))
-
-        adcStartTime = int(subp.stdout.readline())
-
-        for j in range(len(posList)):
-            (p, t) = posList[j]
-            t = t - adcStartTime
-            
-            posList[j] = (p, t)
-            print>>f, (str(t) + "," +str(p))
+            pass
 
         zStage.moveAbsolute(startZ)
 
-        f.close()
-        os.rename("data.dat", "two_axis/data" + str(xPos) + ".dat")
-        os.rename("z_position_list.csv", "two_axis/z_position_list" + str(xPos) + ".csv")
+        subp.wait()
+
+        os.rename("ch1.dat", str(scanNo) + "/ch1_" + str(xPos) + ".dat")
+        os.rename("ch2.dat", str(scanNo) + "/ch2_" + str(xPos) + ".dat")
+        os.rename("ch3.dat", str(scanNo) + "/ch3_" + str(xPos) + ".dat")
+        os.rename("ch4.dat", str(scanNo) + "/ch4_" + str(xPos) + ".dat")
 
         while not zStage.readyToMove():
             pass

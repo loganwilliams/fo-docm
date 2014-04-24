@@ -72,7 +72,7 @@ class ConexAGP:
         self.ser.write("1MM0\r\n")
         time.sleep(0.5)
 
-        self.ser.write("1KP" + str(Ki) + "\r\n")
+        self.ser.write("1KI" + str(Ki) + "\r\n")
         time.sleep(0.5)
 
         self.ser.write("1MM1\r\n")

@@ -28,6 +28,7 @@ def getInputSequence():
     return popen
     #return None
 
+
 if __name__=='__main__':
     #print "Found ports:"
     #for name in scan():
@@ -46,8 +47,8 @@ if __name__=='__main__':
 
     #posS = center - 0.2
     #posE = center + 1.0
-    posS = 11.388 - 0.5
-    posE = 11.388 + 0.5
+    posS = 3.68 - 0.1
+    posE = 3.68 + 0.1
     n = 10
 
     zStage.moveAbsolute(posS)
@@ -56,48 +57,34 @@ if __name__=='__main__':
     while not zStage.readyToMove():
         pass
 
-    for i in range(n):
-        print i
+    posList = []
 
-        posList = []
-        f = open('position_list.csv', 'w')
+    step = 0.0005
+    curpos = zStage.getPosition()
 
-        # tell the stage to start moving
-        zStage.moveAbsolute(posE)
+    while curpos < posE:
+        print curpos
+        posList.append(curpos)
 
-        (op, ot) = zStage.getPositionAndTime()
-        ot = ot.second*1000000 + ot.microsecond
-        posList.append((op, ot))
-
-        # tell the card to start capturing data
         subp = getInputSequence()
 
-        while not zStage.readyToMove():
-            (np, nt) = zStage.getPositionAndTime()
-            nt = nt.second*1000000 + nt.microsecond
-            posList.append((np, nt))
+        time.sleep(0.1)
 
-        adcStartTime = int(subp.stdout.readline())
+        os.rename("data.dat", "psf-water/data" + str(i) + ".dat")
 
-        for j in range(len(posList)):
-            (p, t) = posList[j]
-            t = t - adcStartTime
-            
-            #if (t < 0):
-            #    t = t + 60000000
-            
-            posList[j] = (p, t)
-            print>>f, (str(t) + "," +str(p))
-
-        zStage.moveAbsolute(posS)
-        
-        f.close()
-        os.rename("data.dat", "psf/data" + str(i) + ".dat")
-        os.rename("position_list.csv", "psf/position_list" + str(i) + ".csv")
+        curpos += step
+        zStage.moveAbsolute(curpos)
 
         while not zStage.readyToMove():
             pass
         
-        #raw_input("press enter to continue")
+
+        i += 1
+
+    f = open('psf-water/position_list.csv', 'w')
+    for j in range(len(posList)):
+        print>>f, str(posList[j])
+        
+    f.close()
             
     zStage.close()

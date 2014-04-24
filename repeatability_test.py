@@ -42,8 +42,8 @@ if __name__=='__main__':
 
     time.sleep(1)
     
-    posS = 0
-    posE = 2
+    posS = 17.369
+    posE = 18.369
     n = 50
 
     zStage.moveAbsolute(posS)
@@ -52,14 +52,14 @@ if __name__=='__main__':
     while not zStage.readyToMove():
         pass
 
-    for kp in [5, 10, 20, 40, 60, 100]:
-        print("Setting Kp = " + str(kp))
+    for lf in [5, 10, 20, 50]:
+        print("Setting Lf = " + str(lf))
 
-        zStage.setKp(kp)
+        zStage.setLf(lf)
 
         time.sleep(1)
 
-        os.mkdir("repeatability-" + str(kp))
+        os.mkdir("repeatability-" + str(lf))
 
         for i in range(n):
             print i
@@ -97,8 +97,8 @@ if __name__=='__main__':
             zStage.moveAbsolute(posS)
             
             f.close()
-            os.rename("data.dat", "repeatability-" + str(kp) + "/data" + str(i) + ".dat")
-            os.rename("position_list.csv", "repeatability-" + str(kp) + "/z_position_list" + str(i) + ".csv")
+            os.rename("data.dat", "repeatability-" + str(lf) + "/data" + str(i) + ".dat")
+            os.rename("z_position_list.csv", "repeatability-" + str(lf) + "/z_position_list" + str(i) + ".csv")
 
             while not zStage.readyToMove():
                 pass

@@ -20,7 +20,7 @@ def getInput():
     return output
 
 def getInputSequence():
-    args = ("AdSync/AdSync","32768", "5000000")
+    args = ("AdSync/AdSync","2000", "5000000")
     popen = subprocess.Popen(args, stdout=subprocess.PIPE)
     popen.wait()
     output = popen.stdout.readline()
@@ -34,64 +34,55 @@ if __name__=='__main__':
 
     pd = []
 
-    zStage = ConexAGP('/dev/ttyUSB0')
     xyStage = PriorXY('/dev/ttyS0')
  
-    zStart = 15.93 #mm
-    zEnd = 16.01 # mm
-    zStep = 1 # microns
+    yStart = .1
+    yEnd = .3
+    yStep = 1
 
-    xStart = 0
-    xEnd = .001
+    xStart = .03
+    xEnd = .15
     xStep = 1 # microns
 
     y = 0
     
-    zNum = math.floor(1000*abs(zStart - zEnd) / zStep)
+    yNum = math.floor(1000*abs(yStart - yEnd) / yStep)
     xNum = math.floor(1000*abs(xStart - xEnd) / xStep)
 
     print "Enter scan number> ",
     scanNo = raw_input()
 
-    curpos = zStage.getPosition()
-
-    for xi in range(xNum):
+    for xi in range((xEnd - xStart)*1000/xStep):
         os.makedirs(str(scanNo) + "/" + str(xi) + "/")
 
     xPos = xStart
+    yPos = yStart
 
-    xyStage.moveAbsolute(xPos, y);
+    xyStage.moveAbsolute(xPos, yPos);
 
     xi = 0
 
     while xPos < xEnd:
-        #xyStage.moveAbsolute(xPos*1000, y);
-        time.sleep(0.1)
+        yPos = yStart
+        yi = 0
 
-        zPos = zStart
-        zi = 0
+        while yPos < yEnd:
+            xyStage.moveAbsolute(xPos*1000, yPos*1000)
 
-        while zPos < zEnd:
-            zStage.moveAbsolute(zPos)
-
-            while not zStage.readyToMove():
-                pass
-
-            print str(xPos) + "," + str(zPos)
+            print str(xPos) + "," + str(yPos)
 
             subp = getInputSequence()
             
-            os.rename("ch1.dat", str(scanNo) + "/" + str(xi) + "/ch1_" + str(zi) + ".dat");
-            os.rename("ch2.dat", str(scanNo) + "/" + str(xi) + "/ch2_" + str(zi) + ".dat");
-            os.rename("ch3.dat", str(scanNo) + "/" + str(xi) + "/ch3_" + str(zi) + ".dat");
-            os.rename("ch4.dat", str(scanNo) + "/" + str(xi) + "/ch4_" + str(zi) + ".dat");
+            #os.rename("ch1.dat", str(scanNo) + "/" + str(xi) + "/ch1_" + str(yi) + ".dat");
+            #os.rename("ch2.dat", str(scanNo) + "/" + str(xi) + "/ch2_" + str(yi) + ".dat");
+            os.rename("ch3.dat", str(scanNo) + "/" + str(xi) + "/ch3_" + str(yi) + ".dat");
+            #os.rename("ch4.dat", str(scanNo) + "/" + str(xi) + "/ch4_" + str(yi) + ".dat");
             
-            zi += 1
-            zPos += float(zStep)/1000
+            yi += 1
+            yPos += float(yStep)/1000
        
         xPos += float(xStep)/1000
         xi += 1
 
-    zStage.close()
     xyStage.close()
 
